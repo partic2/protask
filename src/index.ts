@@ -1,5 +1,4 @@
 
-
 class HookedPromise<T> extends Promise<T>{
     __taskId:string='';
     static task={
@@ -42,7 +41,7 @@ class HookedPromise<T> extends Promise<T>{
     }
     constructor(arg0:any){
         super(arg0);
-        this.__taskId=HookedPromise.task.currentTask;
+        this.__taskId=task.currentTask;
     }
     then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined): Promise<TResult1 | TResult2> {
         return super.then((value: T) => {
@@ -58,19 +57,13 @@ class HookedPromise<T> extends Promise<T>{
                 if(typeof onrejected==='function'){
                     return onrejected(e);
                 }
-            }finally{
-                task.currentTask='';
             }
         },(reason: any) => {
             task.currentTask=this.__taskId;
-            try{
-                if(typeof onrejected==='function'){
-                    return onrejected(reason);
-                }else{
-                    throw reason;
-                }
-            }finally{
-                task.currentTask='';
+            if(typeof onrejected==='function'){
+                return onrejected(reason);
+            }else{
+                throw reason;
             }
         }) as any;
     }

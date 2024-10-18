@@ -53,3 +53,7 @@ task.create('test task 2',(async ()=>{
 }));
 
 ```
+
+
+### Known Issue
+'task' may pollute Promise create outside task scope.
