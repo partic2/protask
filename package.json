@@ -1,0 +1,21 @@
+{
+  "name": "protask",
+  "version": "1.0.0",
+  "description": "Promise based task library",
+  "main": "dist/index.js",
+  "types":"dist/index.d.ts",
+  "type": "module",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+	"build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/partic2/protask.git"
+  },
+  "author": "partic2",
+  "license": "ISC"
+}
