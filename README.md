@@ -13,6 +13,7 @@ You can abort a task, or access "task local" (like thread local in Java) like be
 ``` typescript
 import { Task } from 'protask';
 
+
 function sleep<T>(milliSeconds: number, arg?: T): Promise<T> {
     return new Promise(function (resolve, reject) {
         setTimeout(resolve, milliSeconds, arg);
@@ -24,8 +25,24 @@ function *printTaskLocal() {
     console.info(Task.locals());
 }
 
-let task1=new Task(function *(){
+async function childtask(){
+    try{
+        console.info('childtask local:',Task.locals());
+        Task.locals()!.childtask='childtask';
+        while(true){
+            await Task.awaitWrap(sleep(1000));
+        }
+    }catch(e){
+        //aborted
+        console.info('childtask aborted',e);
+    }
+}
+
+let task1=Task.fork(function *(){
     try {
+        Task.locals()!.taskName='task 1';
+        Task.fork(function*(){return yield* Task.yieldWrap(childtask())}).run();
+        yield* printTaskLocal();
         for (let i = 0; i < 100; i++) {
             Task.locals()!.count = i;
             console.log('task 1 running');
@@ -39,13 +56,14 @@ let task1=new Task(function *(){
     } finally {
         console.log('Task 1 finally');
     }
-},'test task 1',).run();
+}).run();
 
-let task2=new Task(function*(){
+let task2=Task.fork(function*(){
     yield* Task.yieldWrap(sleep(3000));
     console.info('abort task 1');
     task1.abort();
 }).run();
+
 
 ```
 
