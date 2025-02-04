@@ -113,6 +113,7 @@ export class Task<T> {
     __locals = {};
     __abortController = new AbortController();
     __step(tNext: any, error: any) {
+        let savedTask=Task.currentTask
         Task.currentTask = this;
         try {
             if (this.__abortController.signal.aborted) {
@@ -134,7 +135,7 @@ export class Task<T> {
         } catch (e) {
             this.__resolver![2](e);
         } finally {
-            Task.currentTask = null;
+            Task.currentTask = savedTask;
         }
     }
     run() {
