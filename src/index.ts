@@ -82,8 +82,8 @@ export class Task<T> {
     }
     /*
         Avoid losing Task.currentTask after await returned.
-        Please avoid to use this function. Using await in Task usually .
         eg: await Task.awaitWrap(anotherAsyncFunction())
+        Please avoid to use this function. This function can't guarantee task context is clean for other "microTask".
     */
     static async awaitWrap<T2>(p: Promise<T2>) {
         Task.getAbortSignal()?.throwIfAborted();
