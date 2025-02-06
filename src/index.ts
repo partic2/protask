@@ -81,14 +81,16 @@ export class Task<T> {
         return (yield p) as T2;
     }
     /*
-        Avoid losing Task.currentTask after await returned, and also avoid setting incorrent Task when await is pending.
+        Avoid losing Task.currentTask after await returned.
+        Please avoid to use this function. Using await in Task usually .
         eg: await Task.awaitWrap(anotherAsyncFunction())
     */
     static async awaitWrap<T2>(p: Promise<T2>) {
         Task.getAbortSignal()?.throwIfAborted();
         let savedTask = Task.currentTask;
-        Task.currentTask = null;
         try {
+            //FIXME:"currentTask" still has possibility to leak to other microTask.
+            new Promise(r=>r(0)).then(()=>Task.currentTask=null);
             let r = await p;
             return r;
         } finally {

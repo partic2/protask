@@ -10,6 +10,7 @@ You can abort a task, or access "task local" (like thread local in Java) like be
 
 ### Usage
 
+
 ``` typescript
 import { Task } from 'protask';
 
@@ -30,6 +31,7 @@ async function childtask(){
         console.info('childtask local:',Task.locals());
         Task.locals()!.childtask='childtask';
         while(true){
+            //Avoid to use it if possible. See comment.
             await Task.awaitWrap(sleep(1000));
         }
     }catch(e){
@@ -67,6 +69,10 @@ let task2=Task.fork(function*(){
 
 ```
 
+
+"yieldWrap" is used to make typescript identifying the return value of a Promise. 
+"awaitWrap" is used to keep Task context in async/await function.But it still may leak Task context to next microTask in loop, like 1.x. Use it carefully. Maybe you'd better to avoid to use it. 
+
 ### NPM Install 
 
 ```sh
@@ -77,3 +83,5 @@ npm i protask
 protask 1.x hook the Promise to implement Task inheritation.But it work incorrectly in many case.
 
 So 2.x use generator and custom scheduler instead. But it's not compatible with native async/await mechanism. Maybe a source convert like babel should also provide.
+
+
