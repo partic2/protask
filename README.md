@@ -26,24 +26,9 @@ function *printTaskLocal() {
     console.info(Task.locals());
 }
 
-async function childtask(){
-    try{
-        console.info('childtask local:',Task.locals());
-        Task.locals()!.childtask='childtask';
-        while(true){
-            //Avoid to use it if possible. See comment.
-            await Task.awaitWrap(sleep(1000));
-        }
-    }catch(e){
-        //aborted
-        console.info('childtask aborted',e);
-    }
-}
-
 let task1=Task.fork(function *(){
     try {
         Task.locals()!.taskName='task 1';
-        Task.fork(function*(){return yield* Task.yieldWrap(childtask())}).run();
         yield* printTaskLocal();
         for (let i = 0; i < 100; i++) {
             Task.locals()!.count = i;
@@ -70,8 +55,11 @@ let task2=Task.fork(function*(){
 ```
 
 
-"yieldWrap" is used to make typescript identifying the return value of a Promise. 
-"awaitWrap" is used to keep Task context in async/await function.But it still may leak Task context to next microTask in loop, like 1.x. Use it carefully. Maybe you'd better to avoid to use it. 
+"yieldWrap" is used to make typescript identifying the return value of a Promise.  
+"Task.fork" to create a new child task.
+
+"awaitWrap" was existed on 2.x version. But it's impossible to use native await in Task safely, until javascript async-context proposal come true.
+So we remove it in 3.x.
 
 ### NPM Install 
 
@@ -82,6 +70,6 @@ npm i protask
 ### Note
 protask 1.x hook the Promise to implement Task inheritation.But it work incorrectly in many case.
 
-So 2.x use generator and custom scheduler instead. But it's not compatible with native async/await mechanism. Maybe a source convert like babel should also provide.
+So 2.x+ version use generator and custom scheduler instead. But it's not compatible with native async/await mechanism. Maybe a source convert like babel should also provide.
 
 

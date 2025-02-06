@@ -80,23 +80,6 @@ export class Task<T> {
     static *yieldWrap<T2>(p: Promise<T2>) {
         return (yield p) as T2;
     }
-    /*
-        Avoid losing Task.currentTask after await returned.
-        eg: await Task.awaitWrap(anotherAsyncFunction())
-        Please avoid to use this function. This function can't guarantee task context is clean for other "microTask".
-    */
-    static async awaitWrap<T2>(p: Promise<T2>) {
-        Task.getAbortSignal()?.throwIfAborted();
-        let savedTask = Task.currentTask;
-        try {
-            //FIXME:"currentTask" still has possibility to leak to other microTask.
-            new Promise(r=>r(0)).then(()=>Task.currentTask=null);
-            let r = await p;
-            return r;
-        } finally {
-            Task.currentTask = savedTask;
-        }
-    }
     constructor(taskMain: Generator<Promise<any>, T, any> | (() => Generator<Promise<any>, T, any>),
         public name?: string) {
         this.__iter = (typeof taskMain === 'function') ? taskMain() : taskMain;
