@@ -58,6 +58,10 @@
     }
 })();
 
+interface TaskCallback<T>{
+    then(resolve:(result:T)=>void,reject:(reason:any)=>void):void
+}
+
 export class Task<T> {
     static currentTask: Task<any> | null = null;
     static locals() {
@@ -66,7 +70,7 @@ export class Task<T> {
     static getAbortSignal() {
         return Task.currentTask?.getAbortSignal();
     }
-    static fork<T2>(taskMain: Generator<Promise<any>, T2, any> | (() => Generator<Promise<any>, T2, any>)){
+    static fork<T2>(taskMain: Generator<TaskCallback<any>, T2, any> | (() => Generator<TaskCallback<any>, T2, any>)){
         if(Task.currentTask!=undefined){
             return Task.currentTask.fork(taskMain);
         }else{
@@ -80,7 +84,7 @@ export class Task<T> {
     static *yieldWrap<T2>(p: Promise<T2>) {
         return (yield p) as T2;
     }
-    constructor(taskMain: Generator<Promise<any>, T, any> | (() => Generator<Promise<any>, T, any>),
+    constructor(taskMain: Generator<TaskCallback<any>, T, any> | (() => Generator<TaskCallback<any>, T, any>),
         public name?: string) {
         this.__iter = (typeof taskMain === 'function') ? taskMain() : taskMain;
         let resolver: Partial<typeof this.__resolver> = [undefined, undefined, undefined];
@@ -94,7 +98,7 @@ export class Task<T> {
         });
     }
     __resolver?: [Promise<T>, ((value: T) => void), ((reason?: any) => void)]
-    __iter?: Generator<Promise<any>>;
+    __iter?: Generator<TaskCallback<any>>;
     __locals = {};
     __abortController = new AbortController();
     __step(tNext: any, error: any) {
@@ -139,7 +143,7 @@ export class Task<T> {
     __childrenTask = new Array<Task<any>>();
     //Fork a child task. 
     //The default behaviour: set the parent locals as prototype of child locals, propagate abort signal to children.
-    fork<T2>(taskMain: Generator<Promise<any>, T2, any> | (() => Generator<Promise<any>, T2, any>)) {
+    fork<T2>(taskMain: Generator<TaskCallback<any>, T2, any> | (() => Generator<TaskCallback<any>, T2, any>)) {
         let childTask = new Task(taskMain);
         Object.setPrototypeOf(childTask.__locals, this.locals());
         this.__childrenTask.push(childTask);
@@ -154,5 +158,11 @@ export class Task<T> {
     }
     then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2> {
         return this.__resolver![0].then(onfulfilled, onrejected);
+    }
+}
+
+export function throwIfAbortError(e:Error){
+    if(e.name==='AbortError'){
+        throw e;
     }
 }
