@@ -71,7 +71,7 @@ export class Task<T> {
         return Task.currentTask?.getAbortSignal();
     }
     static fork<T2>(taskMain: Generator<TaskCallback<any>, T2, any> | (() => Generator<TaskCallback<any>, T2, any>)){
-        if(Task.currentTask!=undefined){
+        if(Task.currentTask!==null){
             return Task.currentTask.fork(taskMain);
         }else{
             return new Task(taskMain);
@@ -108,10 +108,12 @@ export class Task<T> {
             if (this.__abortController.signal.aborted) {
                 this.__iter!.throw(this.__abortController.signal.reason);
             }
+            let yieldResult:IteratorResult<TaskCallback<any>, any>;
             if (error != undefined) {
-                this.__iter!.throw(error);
+                yieldResult = this.__iter!.throw(error);
+            }else{
+                yieldResult = this.__iter!.next(tNext);
             }
-            let yieldResult = this.__iter!.next(tNext);
             if (!yieldResult.done) {
                 yieldResult.value.then(
                     r => this.__step(r, undefined),
